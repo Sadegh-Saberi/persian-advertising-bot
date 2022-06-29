@@ -2,11 +2,14 @@ import dotenv
 from telegram.ext import *
 from telegram import *
 
-FIRST,SECOND = map(chr,range(2))
+FIRST,SECOND,THIRD,FORTH = map(chr,range(4))
 
 async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("سلام به تو")
     return FIRST
+
+def third():
+    pass
 
 async def first(update:Update,context:ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("first message")
@@ -17,6 +20,8 @@ async def second(update:Update,context:ContextTypes.DEFAULT_TYPE):
 
 async def back_first(update:Update,context:ContextTypes.DEFAULT_TYPE):
     return FIRST
+def forth():
+    pass
 
 
 
@@ -27,9 +32,16 @@ application = Application.builder().token(os.getenv("TOKEN")).build()
 application.add_handler(ConversationHandler(
     entry_points=[CommandHandler("start",start)],
     states={
-        FIRST:[MessageHandler(filters.Text(["f"]),first)],
-        SECOND:[MessageHandler(filters.Text(["s"]),second),MessageHandler(filters.Text("b"),back_first)],
+        FIRST:[CommandHandler("first",first)],
+        SECOND:[CommandHandler("second",second)],
+        THIRD:[ConversationHandler(
+            entry_points=[CommandHandler("third",third)],
+            states={
+                FORTH:[CommandHandler("forth",forth)]
+            },
+            fallbacks=[] # first fallback
+        )]
     },
-    fallbacks=[]
+    fallbacks=[] # second fallback
 ))
 application.run_polling()

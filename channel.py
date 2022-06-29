@@ -1,4 +1,6 @@
+from email.policy import default
 import logging
+from turtle import back, update
 
 from telegram.ext import (
     Application,
@@ -107,6 +109,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # choosing announcement
 async def choose_announce_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     user_id = update.effective_chat.id
     keyboard = [
         ["استخدام", "انجام دهنده", "پروژه"],
@@ -121,33 +124,30 @@ async def choose_announce_type(update: Update, context: ContextTypes.DEFAULT_TYP
     await update.message.reply_text(
         text="قالب اطلاعیه‌ی خود را انتخاب کنید.",
         reply_markup=ReplyKeyboardMarkup(
-            keyboard, resize_keyboard=True, one_time_keyboard=True)
-    )
+            keyboard, resize_keyboard=True, one_time_keyboard=True))
     return ANNOUNCEMENT
 
 
 # برای ست کردن تنظیمات قالب پیشفرض باید از دیتابیس استفاده کنی
 
 async def announcement(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # print(ADV_TITLE,ANNOUNCEMENT,CHOOSE_ANN_TYPE)
+
     user_id = update.effective_user.id
 
-    # await temp_adv.delete_data("user_id", user_id)
-    # await final_adv.delete_data("user_id", user_id)
-    # await service.delete_data("user_id", user_id)
-    # await final_service.delete_data("user_id", user_id)
-    # await project.delete_data("user_id", user_id)
-    # await final_project.delete_data("user_id", user_id)
+    await temp_adv.delete_data("user_id", user_id)
+    await final_adv.delete_data("user_id", user_id)
+    await service.delete_data("user_id", user_id)
+    await final_service.delete_data("user_id", user_id)
+    await project.delete_data("user_id", user_id)
+    await final_project.delete_data("user_id", user_id)
 
-    # try:
-    #     message = context.user_data["message"]
-    #     del context.user_data["message"]
-    # except KeyError:
     message = update.message.text
-    context.user_data["message"] =  message
-
+    # context.user_data["message"] = message
     keyboard = [
         [cancel_text, back_text],
     ]
+    print(message)
     if message == "استخدام":
         await temp_adv.insert_data({"user_id": user_id})
         await update.message.reply_text(
@@ -158,7 +158,9 @@ async def announcement(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 one_time_keyboard=True,
             )
         )
+        # context.user_data["state"] = ADV_TITLE
         return ADV_TITLE
+
     elif message == "انجام دهنده":
         await service.insert_data({"user_id": user_id})
         await update.message.reply_text(
@@ -167,7 +169,9 @@ async def announcement(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 keyboard=keyboard, resize_keyboard=True,),
 
         )
+        context.user_data["state"] = SERVICE_TITLE
         return SERVICE_TITLE
+
     elif message == "پروژه":
         await project.insert_data({"user_id": user_id})
         await update.message.reply_text(
@@ -176,6 +180,7 @@ async def announcement(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 keyboard=keyboard, resize_keyboard=True,)
 
         )
+        context.user_data["state"] = PROJECT_TITLE
         return PROJECT_TITLE
 
 
@@ -199,17 +204,20 @@ async def adv_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def adv_gender(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    gender_text = update.message.text
-    if gender_text == 'آقا':
-        gender_number = 0
-    elif gender_text == 'خانم':
-        gender_number = 1
-    elif gender_text == 'خانم یا آقا':
-        gender_number = 2
-    await temp_adv.update_data(
-        update.effective_chat.id,
-        key='gender',
-        value=gender_number)
+    user_id = update.effective_chat.id
+    gender_number = await temp_adv.get_data("user_id",user_id)
+    if gender_number == None:
+        gender_text = update.message.text
+        if gender_text == 'آقا':
+            gender_number = 0
+        elif gender_text == 'خانم':
+            gender_number = 1
+        elif gender_text == 'خانم یا آقا':
+            gender_number = 2
+        await temp_adv.update_data(
+            update.effective_chat.id,
+            key='gender',
+            value=gender_number)
 
     keyboard = [
         ["پاره وقت", "تمام وقت"],
@@ -443,11 +451,17 @@ async def adv_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def adv_skip_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        ["پیش‌نمایش"],
+        [skip_text],
+        [cancel_text, back_text],
+    ]
     await update.message.reply_text(
         text="از ارسال عکس گذر کردید.\n"
         "اگر از اطلاعات وارد شده اطمینان دارید. روی گزینه‌ی 'پیش‌نمایش' جهت مشاهده‌ی آگهی، قبل از ارسال شدن جهت بازبینی، کلیک کنید.",
+        reply_markup= ReplyKeyboardMarkup(keyboard=keyboard),
     )
-    return 'preview'
+    return ADV_PREVIEW
 
 
 async def adv_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -965,8 +979,20 @@ async def unknown_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def back_swicher(update: Update, context: ContextTypes.DEFAULT_TYPE):
-await    
+    # state = context.user_data["state"]
+    # if state in [ADV_TITLE, SERVICE_TITLE, PROJECT_TITLE]:
+    #     print("state -> TITLTE")
 
+    #     del context.user_data["message"]
+    #     del context.user_data["state"]
+    #     return await choose_announce_type(update, context)
+
+    # elif state in [ADV_GENDER]:
+    #     print("state -> GENDER")
+    #     update.message.text = context.user_data["message"]
+    #     return await announcement(update, context)
+    update.message.text = "استخدام"
+    return await announcement(update, context)
 
 
 TOKEN = os.getenv("TOKEN")
@@ -996,6 +1022,8 @@ def main() -> None:
                 states={
                     ADV_GENDER: [
                         MessageHandler(filters.Text(
+                            [back_text]), back_swicher),
+                        MessageHandler(filters.Text(
                             ["آقا", "خانم", "خانم یا آقا"]), adv_gender),
                     ],
                     ADV_TERM: [
@@ -1008,7 +1036,7 @@ def main() -> None:
                     ADV_EDUCATION: [
                         MessageHandler(filters.Text(
                             [skip_text]), adv_skip_education),
-                        # MessageHandler(filters.Text([back_text]), last_state),
+                        MessageHandler(filters.Text([back_text]), adv_gender),
                         MessageHandler(filters.TEXT, adv_education),
                     ],
                     ADV_EXPERIENCE: [
@@ -1060,16 +1088,14 @@ def main() -> None:
                     ],
                 },
                 fallbacks=[
-                    # MessageHandler(filters.Text([back_text]),announcement),
-                    MessageHandler(filters.Text([cancel_text]), start),
+                    MessageHandler(filters.Text([cancel_text]), start), ],
+                map_to_parent={ADV_TITLE: ADV_TITLE},
 
-                ]
             )],
             SERVICE_TITLE: [ConversationHandler(
                 entry_points=[
-                    # MessageHandler(filters.Text([back_text]),choose_announce_type),
                     MessageHandler(filters.TEXT & (
-                        ~filters.Text([cancel_text])), service_title),
+                        ~filters.Text([cancel_text, back_text])), service_title),
                 ],
                 states={
                     SERVICE_SKILLS: [
@@ -1118,21 +1144,19 @@ def main() -> None:
                 },
                 fallbacks=[
                     MessageHandler(filters.Text([cancel_text]), start),
-                ]
+                ],
+                map_to_parent={SERVICE_TITLE:SERVICE_TITLE},
             )],
             PROJECT_TITLE: [ConversationHandler(
                 entry_points=[
-                    MessageHandler(filters.Text(
-                        [back_text]), choose_announce_type),
                     MessageHandler(filters.TEXT & (~filters.Text(
-                        [skip_text, cancel_text])), project_title),
+                        [cancel_text, back_text])), project_title),
                 ],
                 states={
                     PROJECT_EXPLANATION: [
-                        MessageHandler(filters.Text(
-                            [back_text]), announcement),
                         MessageHandler(filters.TEXT & (~filters.Text(
-                            [cancel_text])), project_explanation),
+                            [cancel_text, back_text])), project_explanation),
+                        MessageHandler(filters.Text([back_text]),announcement)
                     ],
                     PROJECT_BUDGET: [
                         MessageHandler(filters.TEXT & (
@@ -1154,16 +1178,14 @@ def main() -> None:
                 },
                 fallbacks=[
                     MessageHandler(filters.Text([cancel_text]), start),
-
-                ]
+                ],
+                map_to_parent={PROJECT_TITLE:PROJECT_TITLE}
             )]
         },
         fallbacks=[
-            MessageHandler(filters.Text([back_text]), back_swicher),
+            MessageHandler(filters.Text([back_text]), choose_announce_type),
             MessageHandler(filters.Text([cancel_text]), start),
-
-
-        ]
+        ],
     ))
     application.add_handler(CallbackQueryHandler(admin_answer))
     # application.add_handler(MessageHandler(filters.Text([back_text]),announcement),)
