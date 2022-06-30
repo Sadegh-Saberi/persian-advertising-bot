@@ -611,7 +611,7 @@ async def service_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
-        text="لطفا مهارت های خود را (طبق نمونه) ارسال کنید."
+        text="لطفا مهارت های خود را (طبق نمونه) ارسال کنید.\n"
         "مهارت ۱\nمهارت ۲\nمهارت ۳\n...",
         reply_markup=ReplyKeyboardMarkup(
             keyboard=keyboard, resize_keyboard=True)
@@ -836,8 +836,8 @@ async def project_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
-        text="لطفا توضیحاتی درمورد پروژه ارائه دهید.",
-        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True),
+        text="لطفا توضیحاتی در مورد پروژه ارائه دهید.",
+        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard,resize_keyboard=True,),
     )
     return PROJECT_EXPLANATION
 
@@ -853,7 +853,7 @@ async def project_explanation(update: Update, context: ContextTypes.DEFAULT_TYPE
     await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا بودجه‌ی خود را وارد کنید.",
-        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard),
+        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard,resize_keyboard=True),
     )
     return PROJECT_BUDGET
 
@@ -944,7 +944,6 @@ async def project_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     keyboard = [
         [cancel_text, back_text]
-        ############################################
     ]
     await update.message.edit_reply_markup(
         reply_markup=ReplyKeyboardMarkup(keyboard=keyboard)
@@ -1007,15 +1006,19 @@ async def admin_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     channel_id = os.getenv('CHANNEL_ID')
     if query.data == "send_to_channel":
+        bot_url = os.getenv("BOT_URL")
+        inline_keyboard = [[InlineKeyboardButton("برای ساخت آگهیت کلیک کن.",url=bot_url)]]
         if photo is not None:
             await context.bot.send_photo(
                 chat_id=channel_id,
                 photo=photo,
-                caption=caption)
+                caption=caption,
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
         else:
             await context.bot.send_message(
                 chat_id=channel_id,
-                text=caption)
+                text=caption,
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
         inline_keyboard = [[InlineKeyboardButton(
             "🟢 ارسال شد. 🟢", callback_data="sent_to_channel")]]
         await query.edit_message_reply_markup(InlineKeyboardMarkup(inline_keyboard))
