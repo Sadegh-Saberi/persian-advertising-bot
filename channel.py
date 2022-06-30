@@ -16,7 +16,7 @@ from telegram import (
     Update,
     ReplyKeyboardMarkup,
 )
-
+from telegram.constants import ChatAction
 # import asyncio
 from utils import DataBase
 import os
@@ -81,10 +81,11 @@ final_project = DataBase("DataBase.db", "final_project",  [
     PROJECT_PHOTO,
     PROJECT_PREVIEW,
     PROJECT_SEND_TO_ADMIN,
-
 ) = map(chr, range(28))
 
 ### starting handlers ###
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.chat_id
     keyboard = [
@@ -98,6 +99,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await final_service.delete_data("user_id", user_id)
     await project.delete_data("user_id", user_id)
     await final_project.delete_data("user_id", user_id)
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
 
         text="جهت ایجاد یک آگهی جدید، از دکمه‌ی «ثبت آگهی» استفاده کنید.",
@@ -121,12 +123,12 @@ async def choose_announce_type(update: Update, context: ContextTypes.DEFAULT_TYP
     await final_service.delete_data("user_id", user_id)
     await project.delete_data("user_id", user_id)
     await final_project.delete_data("user_id", user_id)
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="قالب آگهی خود را انتخاب کنید.",
         reply_markup=ReplyKeyboardMarkup(
             keyboard, resize_keyboard=True, one_time_keyboard=True))
     return ANNOUNCEMENT
-
 
 
 async def announcement(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -140,12 +142,14 @@ async def announcement(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await final_project.delete_data("user_id", user_id)
 
     message = update.message.text
-    # context.user_data["message"] = message
+    context.user_data["message"] = message
     keyboard = [
         [cancel_text, back_text],
     ]
     if message == "استخدام":
         await temp_adv.insert_data({"user_id": user_id})
+        await update.message.reply_chat_action(action=ChatAction.TYPING)
+
         await update.message.reply_text(
             text="لطفا یک تیتر برای آگهی استخدام خود انتخاب کنید.",
             reply_markup=ReplyKeyboardMarkup(
@@ -154,36 +158,39 @@ async def announcement(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 one_time_keyboard=True,
             )
         )
-        # context.user_data["state"] = ADV_TITLE
         return ADV_TITLE
 
     elif message == "انجام دهنده":
         await service.insert_data({"user_id": user_id})
+        await update.message.reply_chat_action(action=ChatAction.TYPING)
+
         await update.message.reply_text(
             text="لطفا یک تیتر برای آگهی خود به عنوان انجام دهنده انتخاب کنید.",
             reply_markup=ReplyKeyboardMarkup(
                 keyboard=keyboard, resize_keyboard=True,),
 
         )
-        context.user_data["state"] = SERVICE_TITLE
         return SERVICE_TITLE
 
     elif message == "پروژه":
         await project.insert_data({"user_id": user_id})
+        await update.message.reply_chat_action(action=ChatAction.TYPING)
         await update.message.reply_text(
             text="لطفا یک تیتر برای پروژه‌ی خود انتخاب کنید.",
             reply_markup=ReplyKeyboardMarkup(
                 keyboard=keyboard, resize_keyboard=True,)
 
         )
-        context.user_data["state"] = PROJECT_TITLE
         return PROJECT_TITLE
 
-async def rules(update:Update,context:ContextTypes.DEFAULT_TYPE):
-    async with aiofiles.open("rules.txt","r",encoding="utf8") as file:
+
+async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async with aiofiles.open("rules.txt", "r", encoding="utf8") as file:
         rules_txt = await file.read()
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
+
     await update.message.reply_text(
-        text = rules_txt,
+        text=rules_txt,
     )
 
 
@@ -197,6 +204,7 @@ async def adv_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ["خانم یا آقا"],
         [cancel_text, back_text],
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
 
     await update.message.reply_text(
         text="لطفا جنسیت مورد نظر را انتخاب کنید.",
@@ -208,7 +216,7 @@ async def adv_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def adv_gender(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_chat.id
-    gender_number = await temp_adv.get_data("user_id",user_id)
+    gender_number = await temp_adv.get_data("user_id", user_id)
     if gender_number == None:
         gender_text = update.message.text
         if gender_text == 'آقا':
@@ -227,6 +235,8 @@ async def adv_gender(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [cancel_text, back_text],
 
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
+
     await update.message.reply_text(
         text="لطفا نوبت کاری را وارد کنید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -252,6 +262,8 @@ async def adv_term(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await temp_adv.update_data(id, 'term', term_number)
     except UnboundLocalError:  # if the user enter the back key, this error occurs
         pass
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
+
     await update.message.reply_text(
         text="لطفا تحصیلات مورد نیاز را وارد کنید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -265,6 +277,7 @@ async def adv_term(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # رد شدن از شیوه‌ی همکاری
 async def adv_skip_term(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
 
     await update.message.reply_text(
         text="لطفا تحصیلات مورد نیاز را وارد کنید.",
@@ -283,6 +296,8 @@ async def adv_education(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [cancel_text, back_text],
     ]
     await temp_adv.update_data(id, 'education', education_text)
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
+
     await update.message.reply_text(
         text="لطفا سابقه‌ی کاری مورد نیاز را وارد کنید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -296,6 +311,8 @@ async def adv_education(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ٰرد شدن از تحصیلات
 async def adv_skip_education(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
+
     await update.message.reply_text(
         text="از وارد کردن تحصیلات گذر کردید.\n"
         "لطفا سابقه‌ی کار مورد نیاز را وارد کنید."
@@ -313,6 +330,8 @@ async def adv_experience(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [cancel_text, back_text],
     ]
     await temp_adv.update_data(user_id=user_id, key='experience', value=exp_text)
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
+
     await update.message.reply_text(
         text="لطفا ساعت کاری مورد نظر را وارد کنید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -325,6 +344,8 @@ async def adv_experience(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # رد شدن از سابقه‌ی کاری
 async def adv_skip_experience(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
+
     await update.message.reply_text(
         text="از وارد کردن سابقه‌ی کاری گذر کردید."
         "لطفا ساعت کاری مورد نظر را وارد کنید."
@@ -340,6 +361,8 @@ async def adv_time(update: Update, context: ContextTypes.DEFAULT_TYPE):  # سا�
         [cancel_text, back_text],
     ]
     await temp_adv.update_data(user_id=user_id, key='time', value=work_time_text)
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
+
     await update.message.reply_text(
         text="لطفا سن مورد نیاز را وارد کنید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -358,6 +381,7 @@ async def adv_age(update: Update, context: ContextTypes.DEFAULT_TYPE):  # سن
         [cancel_text, back_text],
     ]
     await temp_adv.update_data(user_id, key='age', value=age_text)
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا مزایای کاری را به صورت یک لیست (مانند لیست نمونه) وارد کنید.\n"
         "مزینت ۱\n"
@@ -372,7 +396,8 @@ async def adv_age(update: Update, context: ContextTypes.DEFAULT_TYPE):  # سن
     return ADV_ADVANTAGES
 
 
-async def adv_skip_age(update: Update, context: ContextTypes.DEFAULT_TYPE):  # رد شدن از سن
+async def adv_skip_age(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="از وارد کردن سن مورد نیاز گذر کردید.\n"
         "لطفا مزایای کاری را به صورت یک لیست (مانند لیست نمونه) وارد کنید.\n"
@@ -392,6 +417,7 @@ async def adv_advantages(update: Update, context: ContextTypes.DEFAULT_TYPE):  #
         [cancel_text, back_text],
     ]
     await temp_adv.update_data(user_id=user_id, key='advantages', value=adv_text)
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا جهت ارتباط نیرو با شما، یک یا چند راه ارتباطی وارد کنید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -405,6 +431,7 @@ async def adv_advantages(update: Update, context: ContextTypes.DEFAULT_TYPE):  #
 
 # رد شدن از مزایای کاری
 async def adv_skip_advantages(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="از وارد کردن مزایای کاری گذر کردید."
         "لطفا جهت ارتباط نیرو با شما، یک یا چند راه ارتباطی وارد کنید."
@@ -420,6 +447,7 @@ async def adv_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):  # ر
         [cancel_text, back_text],
     ]
     await temp_adv.update_data(user_id=user_id, key='contact', value=contact_text)
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا عکس را ارسال کنید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -430,7 +458,7 @@ async def adv_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):  # ر
     return ADV_PHOTO
 
 
-async def adv_skip_contact(update:Update,context:ContextTypes.DEFAULT_TYPE):
+async def adv_skip_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_chat.id
     contact_text = "@"+update.effective_chat.username
     await temp_adv.update_data(user_id=user_id, key='contact', value=contact_text)
@@ -438,10 +466,12 @@ async def adv_skip_contact(update:Update,context:ContextTypes.DEFAULT_TYPE):
         [skip_text],
         [cancel_text, back_text],
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
-        text = "از وارد کردن راه ارتباطی گذر کردید.\n"
+        text="از وارد کردن راه ارتباطی گذر کردید.\n"
         "لطفا تصویر بنر را ارسال کنید.",
-        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard,resize_keyboard=True,one_time_keyboard=True)
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
     )
     return ADV_PHOTO
 
@@ -459,6 +489,7 @@ async def adv_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [skip_text],
         [cancel_text, back_text],
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="اگر از اطلاعات وارد شده اطمینان دارید. روی گزینه‌ی 'پیش‌نمایش' جهت مشاهده‌ی آگهی، قبل از ارسال شدن جهت بازبیی، کلیک کنید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -475,10 +506,11 @@ async def adv_skip_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [skip_text],
         [cancel_text, back_text],
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="از ارسال عکس گذر کردید.\n"
         "اگر از اطلاعات وارد شده اطمینان دارید. روی گزینه‌ی 'پیش‌نمایش' جهت مشاهده‌ی آگهی، قبل از ارسال شدن جهت بازبینی، کلیک کنید.",
-        reply_markup= ReplyKeyboardMarkup(keyboard=keyboard),
+        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard),
     )
     return ADV_PREVIEW
 
@@ -520,6 +552,7 @@ async def adv_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
         InlineKeyboardButton("ارسال", callback_data='adv_send_to_check'),
     ]]
     if binary_photo is not None:
+        await update.message.reply_chat_action(action=ChatAction.UPLOAD_PHOTO)
         await update.message.reply_photo(
             photo=binary_photo,
             caption=caption,
@@ -528,6 +561,7 @@ async def adv_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         )
     else:
+        await update.message.reply_chat_action(action=ChatAction.TYPING)
         await update.message.reply_text(
             text=caption,
             reply_markup=InlineKeyboardMarkup(inline_keyboard)
@@ -578,6 +612,7 @@ async def service_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [cancel_text, back_text]
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا مهارت های خود را (طبق نمونه) ارسال کنید."
         "مهارت ۱\nمهارت ۲\nمهارت ۳\n...",
@@ -595,6 +630,7 @@ async def service_skills(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [skip_text],
         [cancel_text, back_text],
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا توضیحاتی در مورد پروژه‌ی خود ارايه دهید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -608,6 +644,7 @@ async def service_skip_skills(update: Update, context: ContextTypes.DEFAULT_TYPE
         [skip_text],
         [cancel_text, back_text],
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="از وارد کردن کردن مهارت ها عبور کردید.\n"
         "لطفا توضیحاتی در مورد پروژه‌ی خود ارایه دهید.",
@@ -625,6 +662,7 @@ async def service_explanation(update: Update, context: ContextTypes.DEFAULT_TYPE
         [skip_text],
         [cancel_text, back_text],
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا تصویر را ارسال کنید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -639,6 +677,7 @@ async def service_skip_explanation(update: Update, context: ContextTypes.DEFAULT
         [skip_text],
         [cancel_text, back_text],
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="از وارد کردن توضیحات بیشتر گذر کردید.\n"
         "لطفا تصویر بنر خود را ارسال کنید.",
@@ -660,6 +699,7 @@ async def service_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [skip_text],
         [cancel_text, back_text],
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا جهت ارتباط کارفرما با شما، یک یا چند راه ارتباطی وارد کنید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -674,6 +714,7 @@ async def service_skip_photo(update: Update, context: ContextTypes.DEFAULT_TYPE)
         [skip_text],
         [cancel_text, back_text],
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="از ارسال کردن تصویر بنر عبور کردید.\n"
         "لطفا جهت ارتباط کارفرما با شما، یک یا چند راه ارتباطی وارد کنید.",
@@ -691,6 +732,7 @@ async def service_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ["پیش‌نمایش"],
         [cancel_text, back_text],
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="جهت مشاهده‌ی پیش‌نمایش آگهی قبل از ارسال، روی کلید پیش‌نمایش کلیک کنید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -709,6 +751,7 @@ async def service_skip_contact(update: Update, context: ContextTypes.DEFAULT_TYP
         ["پیش‌نمایش"],
         [cancel_text, back_text],
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="از وارد کردن راه ارتباطی گذر کردید.(نام کاربری شما به عنوان راه ارتباطی انتخاب می‌شود.)"
         "جهت مشاهده‌ی پیش‌نمایش آگهی قبل از ارسال، روی کلید پیش‌نمایش کلیک کنید.",
@@ -716,7 +759,6 @@ async def service_skip_contact(update: Update, context: ContextTypes.DEFAULT_TYP
             keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
     )
     return SERVICE_PREVIEW
-
 
 
 async def service_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -742,12 +784,14 @@ async def service_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
     inline_keyboard = [[InlineKeyboardButton(
         "ارسال", callback_data="service_send_to_check")]]
     if binary_photo is not None:
+        await update.message.reply_chat_action(action=ChatAction.UPLOAD_PHOTO)
         await update.message.reply_photo(
             photo=binary_photo,
             caption=caption,
             reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
         )
     else:
+        await update.message.reply_chat_action(action=ChatAction.TYPING)
         await update.message.reply_text(
             text=caption,
             reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard),
@@ -796,9 +840,10 @@ async def project_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [cancel_text, back_text]
 
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا توضیحاتی درمورد پروژه ارائه دهید.",
-        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard),
+        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True),
     )
     return PROJECT_EXPLANATION
 
@@ -811,6 +856,7 @@ async def project_explanation(update: Update, context: ContextTypes.DEFAULT_TYPE
         [cancel_text, back_text]
 
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا بودجه‌ی خود را وارد کنید.",
         reply_markup=ReplyKeyboardMarkup(keyboard=keyboard),
@@ -826,7 +872,7 @@ async def project_budget(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [skip_text],
         [cancel_text, back_text]
     ]
-
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="جهت ارتباط افراد با شما، لطفا یک یا چند راه ارتباطی وارد کنید.\n"
         "در صورت گذر کردن از این قسمت، «نام کاربری» شما جهت ارتباط با شما در آگهی قرار می‌گیرد.",
@@ -844,7 +890,7 @@ async def project_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ["پیش‌نمایش"],
         [cancel_text, back_text]
     ]
-
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا جهت مشاهده‌ی پیش‌نمایش آگهی، قبل از ارسال، روی کلید «پیش‌نمایش» کلیک کنید.",
         reply_markup=ReplyKeyboardMarkup(
@@ -863,6 +909,7 @@ async def project_skip_contact(update: Update, context: ContextTypes.DEFAULT_TYP
         ["پیش‌نمایش"],
         [cancel_text, back_text]
     ]
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="از وارد کردن راه ارتباطی عبور کردید.\n"
         "لطفا جهت مشاهده‌ی پیش‌نمایش آگهی، قبل از ارسال، روی کلید «پیش‌نمایش» کلیک کنید.",
@@ -896,7 +943,7 @@ async def project_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "ارسال", callback_data="project_send_to_check")]]
 
     await final_project.insert_data({"user_id": user_id, "text": text})
-
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text=text,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard),
@@ -985,27 +1032,36 @@ async def admin_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_reply_markup(InlineKeyboardMarkup(inline_keyboard))
 
 
-# async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # await update.message.reply_text(
-        # text="فرایند متوقف شد.")
-    # await start(update,context)
-    # return ConversationHandler.END
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
+    await update.message.reply_text(
+        text="فرایند متوقف شد.")
+    return await start(update, context)
 
 
 async def unknown_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="متن وارد شده پذیرفته نیست. لطفا مجددا تلاش کنید."
     )
 
 
+async def unknown_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
+    await update.message.reply_text(
+        text="دستور وارد شده پذیرفته نیست. لطفا مجددا تلاش کنید."
+    )
+
+
 async def unknown_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="فایل ارسال شده پذیرفته نیست. لطفا مجددا تلاش کنید."
     )
 
 
 async def back_swicher(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    update.message.text = "استخدام"
+    update.message.text = context.user_data["message"]
     return await announcement(update, context)
 
 
@@ -1082,14 +1138,16 @@ def main() -> None:
                     ],
                     ADV_CONTACT: [
                         MessageHandler(filters.Text([back_text]), adv_age),
-                        MessageHandler(filters.Text([skip_text]), adv_skip_contact),
+                        MessageHandler(filters.Text(
+                            [skip_text]), adv_skip_contact),
                         MessageHandler(filters.TEXT & (~filters.Text(
                             [cancel_text, back_text])), adv_contact)
                     ],
                     ADV_PHOTO: [
                         MessageHandler(filters.Text(
                             [skip_text]), adv_skip_photo),
-                        MessageHandler(filters.Text([back_text]), adv_advantages), MessageHandler(filters.PHOTO, adv_photo),
+                        MessageHandler(filters.Text([back_text]), adv_advantages), MessageHandler(
+                            filters.PHOTO, adv_photo),
                     ],
                     ADV_PREVIEW: [
                         MessageHandler(filters.Text(back_text), adv_contact),
@@ -1105,7 +1163,7 @@ def main() -> None:
                     MessageHandler(filters.Text([cancel_text]), start), ],
                 map_to_parent={
                     ADV_TITLE: ADV_TITLE,
-                    CHOOSE_ANN_TYPE:CHOOSE_ANN_TYPE},
+                    CHOOSE_ANN_TYPE: CHOOSE_ANN_TYPE},
 
             )],
             SERVICE_TITLE: [ConversationHandler(
@@ -1118,7 +1176,7 @@ def main() -> None:
                         MessageHandler(filters.Text(
                             [skip_text]), service_skip_skills),
                         MessageHandler(filters.Text(
-                            [back_text]), announcement),
+                            [back_text]), back_swicher),
                         MessageHandler(filters.TEXT & (
                             ~filters.Text([cancel_text])), service_skills),
                     ],
@@ -1162,9 +1220,9 @@ def main() -> None:
                     MessageHandler(filters.Text([cancel_text]), start),
                 ],
                 map_to_parent={
-                    SERVICE_TITLE:SERVICE_TITLE,
-                    CHOOSE_ANN_TYPE:CHOOSE_ANN_TYPE,
-                    },
+                    SERVICE_TITLE: SERVICE_TITLE,
+                    CHOOSE_ANN_TYPE: CHOOSE_ANN_TYPE,
+                },
             )],
             PROJECT_TITLE: [ConversationHandler(
                 entry_points=[
@@ -1175,7 +1233,7 @@ def main() -> None:
                     PROJECT_EXPLANATION: [
                         MessageHandler(filters.TEXT & (~filters.Text(
                             [cancel_text, back_text])), project_explanation),
-                        MessageHandler(filters.Text([back_text]),announcement)
+                        MessageHandler(filters.Text([back_text]), announcement)
                     ],
                     PROJECT_BUDGET: [
                         MessageHandler(filters.TEXT & (
@@ -1199,19 +1257,22 @@ def main() -> None:
                     MessageHandler(filters.Text([cancel_text]), start),
                 ],
                 map_to_parent={
-                    PROJECT_TITLE:PROJECT_TITLE,
-                    CHOOSE_ANN_TYPE:CHOOSE_ANN_TYPE,
-                    }
+                    PROJECT_TITLE: PROJECT_TITLE,
+                    CHOOSE_ANN_TYPE: CHOOSE_ANN_TYPE,
+                }
             )]
         },
         fallbacks=[
             MessageHandler(filters.Text([back_text]), choose_announce_type),
-            MessageHandler(filters.Text([cancel_text]), start),
+            MessageHandler(filters.Text([cancel_text]), cancel),
         ],
     ))
     application.add_handler(CallbackQueryHandler(admin_answer))
-    application.add_handler(CommandHandler("rules",rules))
-    application.add_handler(MessageHandler(filters.Text(["⚖️ قوانین"]),rules))
+    application.add_handler(CommandHandler("rules", rules))
+    application.add_handler(MessageHandler(filters.Text(["⚖️ قوانین"]), rules))
+    application.add_handler(MessageHandler(filters.COMMAND, unknown_text))
+    application.add_handler(MessageHandler(filters.TEXT, unknown_text))
+    application.add_handler(MessageHandler(filters.ALL, unknown_file))
     application.run_polling()
 
 
