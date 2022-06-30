@@ -1,4 +1,5 @@
 # import asyncio
+import asyncio
 import aiofiles
 import logging
 from telegram.ext import (
@@ -78,10 +79,9 @@ final_project = DataBase("DataBase.db", "final_project",  [
     PROJECT_EXPLANATION,
     PROJECT_BUDGET,
     PROJECT_CONTACT,
-    PROJECT_PHOTO,
     PROJECT_PREVIEW,
     PROJECT_SEND_TO_ADMIN,
-) = map(chr, range(28))
+) = map(chr, range(27))
 
 ### starting handlers ###
 
@@ -479,10 +479,7 @@ async def adv_skip_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def adv_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_chat.id
     photo_file = await update.message.photo[-1].get_file()
-    photo_name = f'adv-{user_id}.jpg'
-    await photo_file.download(photo_name)
-    binary_photo = await DataBase.convert_to_binary(photo_name)
-    os.remove(photo_name)
+    binary_photo = await photo_file.download_as_bytearray()
     await temp_adv.update_data(user_id=user_id, key='photo', value=binary_photo)
     keyboard = [
         ["پیش‌نمایش"],
@@ -690,11 +687,8 @@ async def service_skip_explanation(update: Update, context: ContextTypes.DEFAULT
 async def service_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_chat.id
     photo_file = await update.message.photo[-1].get_file()
-    photo_name = f"service-{user_id}.jpg"
-    await photo_file.download(photo_name)
-    binary_photo = await DataBase.convert_to_binary(photo_name)
-    os.remove(photo_name)
-    await service.update_data(user_id=user_id, key="photo", value=binary_photo)
+    binary_photo = await photo_file.download_as_bytearray()
+    await service.update_data(user_id=user_id,key="photo",value=binary_photo)
     keyboard = [
         [skip_text],
         [cancel_text, back_text],
@@ -1046,7 +1040,7 @@ async def unknown_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def unknown_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="دستور وارد شده پذیرفته نیست. لطفا مجددا تلاش کنید."
@@ -1163,7 +1157,8 @@ def main() -> None:
                     MessageHandler(filters.Text([cancel_text]), start), ],
                 map_to_parent={
                     ADV_TITLE: ADV_TITLE,
-                    CHOOSE_ANN_TYPE: CHOOSE_ANN_TYPE},
+                    CHOOSE_ANN_TYPE: CHOOSE_ANN_TYPE,
+                    },
 
             )],
             SERVICE_TITLE: [ConversationHandler(
@@ -1265,12 +1260,13 @@ def main() -> None:
         fallbacks=[
             MessageHandler(filters.Text([back_text]), choose_announce_type),
             MessageHandler(filters.Text([cancel_text]), cancel),
+            CommandHandler("start", start),
         ],
     ))
     application.add_handler(CallbackQueryHandler(admin_answer))
     application.add_handler(CommandHandler("rules", rules))
     application.add_handler(MessageHandler(filters.Text(["⚖️ قوانین"]), rules))
-    application.add_handler(MessageHandler(filters.COMMAND, unknown_text))
+    application.add_handler(MessageHandler(filters.COMMAND, unknown_command))
     application.add_handler(MessageHandler(filters.TEXT, unknown_text))
     application.add_handler(MessageHandler(filters.ALL, unknown_file))
     application.run_polling()
