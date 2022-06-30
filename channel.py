@@ -1,7 +1,4 @@
-from email.policy import default
 import logging
-from turtle import back, update
-
 from telegram.ext import (
     Application,
     MessageHandler,
@@ -87,7 +84,7 @@ final_project = DataBase("DataBase.db", "final_project",  [
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.chat_id
     keyboard = [
-        ["ثبت اطلاعیه", "جست و جو (به زودی...)"],
+        ["ثبت آگهی", "جست و جو (به زودی...)"],
         ["افزودن اشتراک (به زودی...)"],
         ["درباره‌ی ما (به زودی...)", "قوانین"]
     ]
@@ -99,7 +96,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await final_project.delete_data("user_id", user_id)
     await update.message.reply_text(
 
-        text="جهت ایجاد یک اطلاعیه جدید، از دکمه‌ی «ثبت اطلاعیه» استفاده کنید.",
+        text="جهت ایجاد یک آگهی جدید، از دکمه‌ی «ثبت آگهی» استفاده کنید.",
         reply_markup=ReplyKeyboardMarkup(
             keyboard, resize_keyboard=True, one_time_keyboard=True)
     )
@@ -122,7 +119,7 @@ async def choose_announce_type(update: Update, context: ContextTypes.DEFAULT_TYP
     await project.delete_data("user_id", user_id)
     await final_project.delete_data("user_id", user_id)
     await update.message.reply_text(
-        text="قالب اطلاعیه‌ی خود را انتخاب کنید.",
+        text="قالب آگهی خود را انتخاب کنید.",
         reply_markup=ReplyKeyboardMarkup(
             keyboard, resize_keyboard=True, one_time_keyboard=True))
     return ANNOUNCEMENT
@@ -164,7 +161,7 @@ async def announcement(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif message == "انجام دهنده":
         await service.insert_data({"user_id": user_id})
         await update.message.reply_text(
-            text="لطفا یک تیتر برای اطلاعیه‌ی خود به عنوان انجام دهنده انتخاب کنید.",
+            text="لطفا یک تیتر برای آگهی خود به عنوان انجام دهنده انتخاب کنید.",
             reply_markup=ReplyKeyboardMarkup(
                 keyboard=keyboard, resize_keyboard=True,),
 
@@ -427,6 +424,22 @@ async def adv_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):  # ر
     return ADV_PHOTO
 
 
+async def adv_skip_contact(update:Update,context:ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_chat.id
+    contact_text = "@"+update.effective_chat.username
+    await temp_adv.update_data(user_id=user_id, key='contact', value=contact_text)
+    keyboard = [
+        [skip_text],
+        [cancel_text, back_text],
+    ]
+    await update.message.reply_text(
+        text = "از وارد کردن راه ارتباطی گذر کردید.\n"
+        "لطفا تصویر بنر را ارسال کنید.",
+        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard,resize_keyboard=True,one_time_keyboard=True)
+    )
+    return ADV_PHOTO
+
+
 async def adv_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_chat.id
     photo_file = await update.message.photo[-1].get_file()
@@ -673,7 +686,7 @@ async def service_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [cancel_text, back_text],
     ]
     await update.message.reply_text(
-        text="جهت مشاهده‌ی پیش‌نمایش اطلاعیه قبل از ارسال، روی کلید پیش‌نمایش کلیک کنید.",
+        text="جهت مشاهده‌ی پیش‌نمایش آگهی قبل از ارسال، روی کلید پیش‌نمایش کلیک کنید.",
         reply_markup=ReplyKeyboardMarkup(
             keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
     )
@@ -681,18 +694,23 @@ async def service_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def service_skip_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
+    user_id = update.effective_chat.id
+    contact_text = update.effective_chat
+    if contact_text == skip_text:
+        contact_text = "@"+update.effective_chat.username
+    await temp_adv.update_data(user_id=user_id, key='contact', value=contact_text)
     keyboard = [
         ["پیش‌نمایش"],
         [cancel_text, back_text],
     ]
     await update.message.reply_text(
         text="از وارد کردن راه ارتباطی گذر کردید.(نام کاربری شما به عنوان راه ارتباطی انتخاب می‌شود.)"
-        "جهت مشاهده‌ی پیش‌نمایش اطلاعیه قبل از ارسال، روی کلید پیش‌نمایش کلیک کنید.",
+        "جهت مشاهده‌ی پیش‌نمایش آگهی قبل از ارسال، روی کلید پیش‌نمایش کلیک کنید.",
         reply_markup=ReplyKeyboardMarkup(
             keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
     )
     return SERVICE_PREVIEW
+
 
 
 async def service_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -805,7 +823,7 @@ async def project_budget(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         text="جهت ارتباط افراد با شما، لطفا یک یا چند راه ارتباطی وارد کنید.\n"
-        "در صورت گذر کردن از این قسمت، «نام کاربری» شما جهت ارتباط با شما در اطلاعیه قرار می‌گیرد.",
+        "در صورت گذر کردن از این قسمت، «نام کاربری» شما جهت ارتباط با شما در آگهی قرار می‌گیرد.",
         reply_markup=ReplyKeyboardMarkup(
             keyboard=keyboard, resize_keyboard=True)
     )
@@ -822,7 +840,7 @@ async def project_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     await update.message.reply_text(
-        text="لطفا جهت مشاهده‌ی پیش‌نمایش اطلاعیه، قبل از ارسال، روی کلید «پیش‌نمایش» کلیک کنید.",
+        text="لطفا جهت مشاهده‌ی پیش‌نمایش آگهی، قبل از ارسال، روی کلید «پیش‌نمایش» کلیک کنید.",
         reply_markup=ReplyKeyboardMarkup(
             keyboard=keyboard, resize_keyboard=True)
     )
@@ -830,16 +848,18 @@ async def project_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def project_skip_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.chat_id
-    message = update.message.from_user.username
-    await project.update_data(user_id=user_id, key="contact", value=message)
+    user_id = update.effective_chat.id
+    contact_text = update.effective_chat
+    if contact_text == skip_text:
+        contact_text = "@"+update.effective_chat.username
+    await temp_adv.update_data(user_id=user_id, key='contact', value=contact_text)
     keyboard = [
         ["پیش‌نمایش"],
         [cancel_text, back_text]
     ]
     await update.message.reply_text(
         text="از وارد کردن راه ارتباطی عبور کردید.\n"
-        "لطفا جهت مشاهده‌ی پیش‌نمایش اطلاعیه، قبل از ارسال، روی کلید «پیش‌نمایش» کلیک کنید.",
+        "لطفا جهت مشاهده‌ی پیش‌نمایش آگهی، قبل از ارسال، روی کلید «پیش‌نمایش» کلیک کنید.",
         reply_markup=ReplyKeyboardMarkup(
             keyboard=keyboard, resize_keyboard=True),
     )
@@ -979,18 +999,6 @@ async def unknown_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def back_swicher(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # state = context.user_data["state"]
-    # if state in [ADV_TITLE, SERVICE_TITLE, PROJECT_TITLE]:
-    #     print("state -> TITLTE")
-
-    #     del context.user_data["message"]
-    #     del context.user_data["state"]
-    #     return await choose_announce_type(update, context)
-
-    # elif state in [ADV_GENDER]:
-    #     print("state -> GENDER")
-    #     update.message.text = context.user_data["message"]
-    #     return await announcement(update, context)
     update.message.text = "استخدام"
     return await announcement(update, context)
 
@@ -1007,7 +1015,7 @@ def main() -> None:
         states={
             CHOOSE_ANN_TYPE: [
                 MessageHandler(filters.Text(
-                    ["ثبت اطلاعیه"]), choose_announce_type),
+                    ["ثبت آگهی"]), choose_announce_type),
             ],
             ANNOUNCEMENT: [
                 MessageHandler(filters.Text([back_text]), start),
@@ -1068,14 +1076,14 @@ def main() -> None:
                     ],
                     ADV_CONTACT: [
                         MessageHandler(filters.Text([back_text]), adv_age),
+                        MessageHandler(filters.Text([skip_text]), adv_skip_contact),
                         MessageHandler(filters.TEXT & (~filters.Text(
                             [cancel_text, back_text])), adv_contact)
                     ],
                     ADV_PHOTO: [
                         MessageHandler(filters.Text(
                             [skip_text]), adv_skip_photo),
-                        MessageHandler(filters.Text([back_text]), adv_advantages), MessageHandler(
-                            filters.PHOTO, adv_photo)
+                        MessageHandler(filters.Text([back_text]), adv_advantages), MessageHandler(filters.PHOTO, adv_photo),
                     ],
                     ADV_PREVIEW: [
                         MessageHandler(filters.Text(back_text), adv_contact),
@@ -1083,8 +1091,8 @@ def main() -> None:
                             ["پیش‌نمایش"]), adv_preview)
                     ],
                     ADV_SEND_TO_ADMIN: [
+                        MessageHandler(filters.Text([back_text]), adv_photo),
                         CallbackQueryHandler(adv_send_to_admin),
-                        MessageHandler(filters.Text([back_text]), adv_photo)
                     ],
                 },
                 fallbacks=[
