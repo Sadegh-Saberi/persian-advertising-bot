@@ -1,4 +1,3 @@
-# import asyncio
 import asyncio
 import aiofiles
 import logging
@@ -598,7 +597,7 @@ async def adv_send_to_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup(
                     inline_keyboard=inline_keyboard)
             )
-        return ConversationHandler.END
+        return await start(update,context)
 
 
 ### SERVICE HANDLERS ###
@@ -688,7 +687,7 @@ async def service_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_chat.id
     photo_file = await update.message.photo[-1].get_file()
     binary_photo = await photo_file.download_as_bytearray()
-    await service.update_data(user_id=user_id,key="photo",value=binary_photo)
+    await service.update_data(user_id=user_id, key="photo", value=binary_photo)
     keyboard = [
         [skip_text],
         [cancel_text, back_text],
@@ -820,7 +819,8 @@ async def service_send_to_admin(update: Update, context: ContextTypes.DEFAULT_TY
                 chat_id=admin_id,
                 text=caption,
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
-        return ConversationHandler.END
+    return await start(update,context)
+
 
 
 ### PROJECT HANDLERS ###
@@ -837,7 +837,8 @@ async def project_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا توضیحاتی در مورد پروژه ارائه دهید.",
-        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard,resize_keyboard=True,),
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=keyboard, resize_keyboard=True,),
     )
     return PROJECT_EXPLANATION
 
@@ -853,7 +854,8 @@ async def project_explanation(update: Update, context: ContextTypes.DEFAULT_TYPE
     await update.message.reply_chat_action(action=ChatAction.TYPING)
     await update.message.reply_text(
         text="لطفا بودجه‌ی خود را وارد کنید.",
-        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard,resize_keyboard=True),
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=keyboard, resize_keyboard=True),
     )
     return PROJECT_BUDGET
 
@@ -942,12 +944,17 @@ async def project_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text=text,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard),
     )
-    keyboard = [
-        [cancel_text, back_text]
-    ]
-    await update.message.edit_reply_markup(
-        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard)
-    )
+
+    
+    # did not work ...
+
+    # keyboard = [
+    #     [cancel_text, back_text]
+    # ]
+    # await update.message.edit_reply_markup(
+        
+    #     reply_markup=ReplyKeyboardMarkup(keyboard=keyboard)
+    # )
     return PROJECT_SEND_TO_ADMIN
 
 
@@ -965,32 +972,27 @@ async def project_send_to_admin(update: Update, context: ContextTypes.DEFAULT_TY
             [InlineKeyboardButton('لغو', callback_data="reject"), InlineKeyboardButton(
                 'ارسال به کانال', callback_data="send_to_channel")]
         ]
-        caption, photo = final_data[1:]
+        caption = final_data[1]
         admin_id = os.getenv("ADMIN_CHAT_ID")
-        if photo is not None:
-            await context.bot.send_photo(
-                chat_id=admin_id,
-                caption=caption,
-                photo=photo,
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=inline_keyboard))
-        else:
-            await context.bot.send_message(
-                chat_id=admin_id,
-                text=caption,
-                reply_markup=InlineKeyboardMarkup(
-                    inline_keyboard=inline_keyboard)
-            )
-        return ConversationHandler.END
+        await context.bot.send_message(
+            chat_id=admin_id,
+            text=caption,
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=inline_keyboard)
+        )
+    return await start(update,context)
 
 
 ### COMMON HANDLERS ###
 
+# this is a hard coding ...
 async def admin_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     try:
         final_data = await final_project.get_data("user_id", query.from_user.id)
-        caption, photo = final_data[1:]
+        caption = final_data[1]
+        photo = None
         await final_project.delete_data("user_id", query.from_user.id)
 
     except:
@@ -1007,7 +1009,8 @@ async def admin_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     channel_id = os.getenv('CHANNEL_ID')
     if query.data == "send_to_channel":
         bot_url = os.getenv("BOT_URL")
-        inline_keyboard = [[InlineKeyboardButton("برای ساخت آگهیت کلیک کن.",url=bot_url)]]
+        inline_keyboard = [[InlineKeyboardButton(
+            "برای ساخت آگهیت کلیک کن", url=bot_url)]]
         if photo is not None:
             await context.bot.send_photo(
                 chat_id=channel_id,
@@ -1161,7 +1164,7 @@ def main() -> None:
                 map_to_parent={
                     ADV_TITLE: ADV_TITLE,
                     CHOOSE_ANN_TYPE: CHOOSE_ANN_TYPE,
-                    },
+                },
 
             )],
             SERVICE_TITLE: [ConversationHandler(
