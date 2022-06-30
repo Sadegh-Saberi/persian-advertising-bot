@@ -1,3 +1,5 @@
+# import asyncio
+import aiofiles
 import logging
 from telegram.ext import (
     Application,
@@ -86,7 +88,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         ["ثبت آگهی", "جست و جو (به زودی...)"],
         ["افزودن اشتراک (به زودی...)"],
-        ["درباره‌ی ما (به زودی...)", "قوانین"]
+        ["درباره‌ی ما (به زودی...)", "⚖️ قوانین"]
     ]
     await temp_adv.delete_data("user_id", user_id)
     await final_adv.delete_data("user_id", user_id)
@@ -98,7 +100,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         text="جهت ایجاد یک آگهی جدید، از دکمه‌ی «ثبت آگهی» استفاده کنید.",
         reply_markup=ReplyKeyboardMarkup(
-            keyboard, resize_keyboard=True, one_time_keyboard=True)
+            keyboard, resize_keyboard=True)
     )
 
     return CHOOSE_ANN_TYPE
@@ -179,6 +181,13 @@ async def announcement(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         context.user_data["state"] = PROJECT_TITLE
         return PROJECT_TITLE
+
+async def rules(update:Update,context:ContextTypes.DEFAULT_TYPE):
+    async with aiofiles.open("rules.txt","r",encoding="utf8") as file:
+        rules_txt = await file.read()
+    await update.message.reply_text(
+        text = rules_txt,
+    )
 
 
 ### ADVERTISEMENT HANDLERS ###
@@ -1196,8 +1205,8 @@ def main() -> None:
         ],
     ))
     application.add_handler(CallbackQueryHandler(admin_answer))
-    # application.add_handler(MessageHandler(filters.Text([back_text]),announcement),)
-    # application.add_handler(MessageHandler(filters.ALL,unknown_text))
+    application.add_handler(CommandHandler("rules",rules))
+    application.add_handler(MessageHandler(filters.Text(["⚖️ قوانین"]),rules))
     application.run_polling()
 
 

@@ -3,8 +3,8 @@
 
 test.py
 ptb.zip
-*.txt
-
+features.txt
+guide.txt
 ### Database ###
 *.accdb
 *.db
