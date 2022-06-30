@@ -28,11 +28,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
+### base keyboard buttons' text ###
 back_text = "🔙 برگشت"
 skip_text = "◀️ رد شدن"
 cancel_text = "💢 کنسل"
 
+### db settings ####
 temp_adv = DataBase('DataBase.db', "adv", [back_text, skip_text, cancel_text])
 final_adv = DataBase("DataBase.db", "final_adv", [back_text, skip_text])
 
@@ -46,6 +47,7 @@ project = DataBase("DataBase.db", "project",  [
 final_project = DataBase("DataBase.db", "final_project",  [
                          back_text, skip_text, cancel_text])
 
+### setting variables ###
 (
     ### COMMON VARIABLES ###
     ANNOUNCEMENT,
@@ -80,9 +82,9 @@ final_project = DataBase("DataBase.db", "final_project",  [
     PROJECT_PREVIEW,
     PROJECT_SEND_TO_ADMIN,
 
-) = map(chr, range(28))  # change the range
+) = map(chr, range(28))
 
-
+### starting handlers ###
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.chat_id
     keyboard = [
@@ -106,7 +108,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return CHOOSE_ANN_TYPE
 
 
-# choosing announcement
 async def choose_announce_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_chat.id
@@ -127,11 +128,8 @@ async def choose_announce_type(update: Update, context: ContextTypes.DEFAULT_TYP
     return ANNOUNCEMENT
 
 
-# برای ست کردن تنظیمات قالب پیشفرض باید از دیتابیس استفاده کنی
 
 async def announcement(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # print(ADV_TITLE,ANNOUNCEMENT,CHOOSE_ANN_TYPE)
-
     user_id = update.effective_user.id
 
     await temp_adv.delete_data("user_id", user_id)
@@ -146,7 +144,6 @@ async def announcement(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [cancel_text, back_text],
     ]
-    print(message)
     if message == "استخدام":
         await temp_adv.insert_data({"user_id": user_id})
         await update.message.reply_text(
@@ -1106,7 +1103,9 @@ def main() -> None:
                 },
                 fallbacks=[
                     MessageHandler(filters.Text([cancel_text]), start), ],
-                map_to_parent={ADV_TITLE: ADV_TITLE},
+                map_to_parent={
+                    ADV_TITLE: ADV_TITLE,
+                    CHOOSE_ANN_TYPE:CHOOSE_ANN_TYPE},
 
             )],
             SERVICE_TITLE: [ConversationHandler(
@@ -1162,7 +1161,10 @@ def main() -> None:
                 fallbacks=[
                     MessageHandler(filters.Text([cancel_text]), start),
                 ],
-                map_to_parent={SERVICE_TITLE:SERVICE_TITLE},
+                map_to_parent={
+                    SERVICE_TITLE:SERVICE_TITLE,
+                    CHOOSE_ANN_TYPE:CHOOSE_ANN_TYPE,
+                    },
             )],
             PROJECT_TITLE: [ConversationHandler(
                 entry_points=[
@@ -1196,7 +1198,10 @@ def main() -> None:
                 fallbacks=[
                     MessageHandler(filters.Text([cancel_text]), start),
                 ],
-                map_to_parent={PROJECT_TITLE:PROJECT_TITLE}
+                map_to_parent={
+                    PROJECT_TITLE:PROJECT_TITLE,
+                    CHOOSE_ANN_TYPE:CHOOSE_ANN_TYPE,
+                    }
             )]
         },
         fallbacks=[
