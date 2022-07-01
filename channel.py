@@ -1,6 +1,4 @@
 import asyncio
-from cgitb import text
-from email import message
 import aiofiles
 import logging
 from telegram.ext import (
@@ -19,7 +17,6 @@ from telegram import (
     ReplyKeyboardMarkup,
 )
 from telegram.constants import ChatAction
-# import asyncio
 from utils import DataBase
 import os
 import dotenv
