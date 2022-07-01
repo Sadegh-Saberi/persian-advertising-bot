@@ -105,7 +105,7 @@ if '__main__' == __name__:
     connection.commit()
     query = """ CREATE TABLE final_adv(
                 user_id INTEGER PRIMARY KEY,
-                caption BLOB,
+                caption TEXT,
                 photo BLOB
                 )
             """
