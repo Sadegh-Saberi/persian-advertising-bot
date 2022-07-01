@@ -1,4 +1,5 @@
 # import asyncio
+import asyncio
 import aiofiles
 import logging
 from telegram.ext import (
@@ -86,7 +87,7 @@ final_project = DataBase("DataBase.db", "final_project",  [
 
 ### starting handlers ###
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.chat_id
+    user_id = update.effective_chat.id
     keyboard = [
         ["ثبت آگهی", "جست و جو (به زودی...)"],
         ["افزودن اشتراک (به زودی...)"],
@@ -496,24 +497,28 @@ async def adv_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
         adv_list = None
 
     contact_list = str()
-    for cnt in contact.split("\n"):
-        contact_list += f"    🔹 {cnt}\n"
+    if contact is not None:
+        for cnt in contact.split("\n"):
+            contact_list += f"    🔹 {cnt}\n"
+    else:
+        contact_list = f"    🔹 @{update.effective_user.username}"
 
-    caption = f"✅ {title}\n"
+    caption = f"✅ {title}\n\n"
     if age is not None:
-        caption += f"🟠 سن:\t{age}\n"
+        caption += f"🟠 سن:    {age}\n\n"
     if gender_number is not None:
-        caption += f"🟠 جنسیت:\n    🔹 {DataBase.number_to_gender(gender_number)}\n"
+        caption += f"🟠 جنسیت:    {DataBase.number_to_gender(gender_number)}\n\n"
     if term_number is not None:
-        caption += f"🟠 نوع قرارداد:\n    🔹 {DataBase.number_to_term(term_number)}\n"
+        caption += f"🟠 نوع قرارداد:    {DataBase.number_to_term(term_number)}\n\n"
     if education is not None:
-        caption += f"🟠 تحصیلات:\n    🔹 {education}\n"
+        caption += f"🟠 تحصیلات:    {education}\n\n"
     if experience is not None:
-        caption += f"🟠 سابقه‌ی همکاری:\n    🔹 {experience}\n"
+        caption += f"🟠 سابقه‌ی کاری:    {experience}\n\n"
     if time is not None:
-        caption += f"🟠 ساعت کاری:\n    🔹 {time}\n"
-    if adv_list is not None:
-        caption += f"🟠 مزایای کاری:\n{adv_list}\n"
+        caption += f"🟠 ساعت کاری:    {time}\n\n"
+    if adv_list is not None: # adv means advantages here
+        caption += f"🟠 مزایای کاری:\n{adv_list}\n\n"
+
     caption += f"☎️ راه ارتباطی:\n{contact_list}"
 
     inline_keyboard = [[
@@ -532,6 +537,8 @@ async def adv_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=caption,
             reply_markup=InlineKeyboardMarkup(inline_keyboard)
         )
+    print(caption)
+    await asyncio.sleep(4)
 
     await final_adv.insert_data({"user_id": user_id, "caption": caption, "photo": binary_photo})
 
@@ -567,7 +574,7 @@ async def adv_send_to_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup(
                     inline_keyboard=inline_keyboard)
             )
-        return ConversationHandler.END
+        return await start(update,start)
 
 
 ### SERVICE HANDLERS ###
