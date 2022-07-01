@@ -953,7 +953,7 @@ async def project_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
         for cnt in contact.split("\n"):
             contact_list += f"    🔹 {cnt}\n"
     else:
-        contact_list = None
+        contact_list = f"    🔹 @{update.effective_user.username}\n"
 
     text = f"✅ {title}\n"
     if explanation is not None:
