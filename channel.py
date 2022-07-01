@@ -79,7 +79,9 @@ final_project = DataBase("DataBase.db", "final_project",  [
     PROJECT_CONTACT,
     PROJECT_PREVIEW,
     PROJECT_SEND_TO_ADMIN,
-) = map(chr, range(27))
+    ### ADMIN VARIABLES ###
+    ADMIN_CONTACT,
+) = map(chr, range(28))
 
 ### starting handlers ###
 
@@ -88,8 +90,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_chat.id
     keyboard = [
         ["ثبت آگهی", "جست و جو (به زودی...)"],
-        ["افزودن اشتراک (به زودی...)"],
-        ["درباره‌ی ما (به زودی...)", "⚖️ قوانین"]
+        [ "⚖️ قوانین","افزودن اشتراک (به زودی...)"],
+        ["درباره‌ی ما (به زودی...)","🤳 ارتباط با ادمین"]
     ]
     # await temp_adv.delete_data("user_id", user_id)
     # await final_adv.delete_data("user_id", user_id)
@@ -1097,6 +1099,30 @@ async def back_swicher(update: Update, context: ContextTypes.DEFAULT_TYPE):
     update.message.text = context.user_data["message"]
     return await announcement(update, context)
 
+async def admin_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [[cancel_text]]
+    await update.message.reply_text(
+        text="✍️ جهت ارتباط با ادمین پیام خود را ارسال کنید.",
+        reply_markup=ReplyKeyboardMarkup(keyboard=keyboard,resize_keyboard=True))
+    return ADMIN_CONTACT
+
+    
+async def admin_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_chat.id
+    message_id = update.message.id
+    admin_id = os.getenv("ADMIN_CHAT_ID")
+    
+    await context.bot.forward_message(
+        from_chat_id=user_id,
+        message_id=message_id,
+        chat_id=admin_id,
+    )
+    await update.message.reply_text(
+        text = "✅ پیام شما به ادمین ارسال شد.",
+        quote=True,
+    )
+    return await start(update,context)
+
 
 TOKEN = os.getenv("TOKEN")
 
@@ -1303,8 +1329,20 @@ def main() -> None:
         ],
     ))
     application.add_handler(CallbackQueryHandler(admin_answer))
+
+    application.add_handler(ConversationHandler(
+        entry_points=[
+            MessageHandler(filters.Text(["🤳 ارتباط با ادمین"]),admin_start),
+            ],
+        states={
+            ADMIN_CONTACT : [MessageHandler(filters.ALL,admin_contact)]
+        },
+        fallbacks=[MessageHandler(filters.Text([back_text]),cancel)],
+    ))
+
     application.add_handler(CommandHandler("rules", rules))
     application.add_handler(MessageHandler(filters.Text(["⚖️ قوانین"]), rules))
+
     application.add_handler(MessageHandler(filters.COMMAND, unknown_command))
     application.add_handler(MessageHandler(filters.TEXT, unknown_text))
     application.add_handler(MessageHandler(filters.ALL, unknown_file))
