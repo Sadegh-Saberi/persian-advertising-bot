@@ -9,10 +9,6 @@ class DataBase:
         self.not_update_values = not_update_values
         self.table = table
 
-    async def convert_to_binary(photo):
-        with open(photo, mode="rb") as binary_photo:
-            return binary_photo.read()
-
     def number_to_gender(number: int):
         if number == 0:
             return 'آقا'

@@ -86,7 +86,7 @@ final_project = DataBase("DataBase.db", "final_project",  [
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_chat.id
+    user_id = update.message.chat_id
     keyboard = [
         ["ثبت آگهی", "جست و جو (به زودی...)"],
         ["افزودن اشتراک (به زودی...)"],
@@ -524,28 +524,24 @@ async def adv_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
         adv_list = None
 
     contact_list = str()
-    if contact is not None:
-        for cnt in contact.split("\n"):
-            contact_list += f"    🔹 {cnt}\n"
-    else:
-        contact_list = f"    🔹 @{update.effective_user.username}"
+    for cnt in contact.split("\n"):
+        contact_list += f"    🔹 {cnt}\n"
 
-    caption = f"✅ {title}\n\n"
+    caption = f"✅ {title}\n"
     if age is not None:
-        caption += f"🟠 سن:    {age}\n\n"
+        caption += f"🟠 سن:\t{age}\n"
     if gender_number is not None:
-        caption += f"🟠 جنسیت:    {DataBase.number_to_gender(gender_number)}\n\n"
+        caption += f"🟠 جنسیت:\n    🔹 {DataBase.number_to_gender(gender_number)}\n"
     if term_number is not None:
-        caption += f"🟠 نوع قرارداد:    {DataBase.number_to_term(term_number)}\n\n"
+        caption += f"🟠 نوع قرارداد:\n    🔹 {DataBase.number_to_term(term_number)}\n"
     if education is not None:
-        caption += f"🟠 تحصیلات:    {education}\n\n"
+        caption += f"🟠 تحصیلات:\n    🔹 {education}\n"
     if experience is not None:
-        caption += f"🟠 سابقه‌ی کاری:    {experience}\n\n"
+        caption += f"🟠 سابقه‌ی همکاری:\n    🔹 {experience}\n"
     if time is not None:
-        caption += f"🟠 ساعت کاری:    {time}\n\n"
-    if adv_list is not None: # adv means advantages here
-        caption += f"🟠 مزایای کاری:\n{adv_list}\n\n"
-
+        caption += f"🟠 ساعت کاری:\n    🔹 {time}\n"
+    if adv_list is not None:
+        caption += f"🟠 مزایای کاری:\n{adv_list}\n"
     caption += f"☎️ راه ارتباطی:\n{contact_list}"
 
     inline_keyboard = [[
@@ -566,8 +562,6 @@ async def adv_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=caption,
             reply_markup=InlineKeyboardMarkup(inline_keyboard)
         )
-    print(caption)
-    await asyncio.sleep(4)
 
     await final_adv.insert_data({"user_id": user_id, "caption": caption, "photo": binary_photo})
 
@@ -604,8 +598,6 @@ async def adv_send_to_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     inline_keyboard=inline_keyboard)
             )
         return await start(update,context)
-
-
 
 
 ### SERVICE HANDLERS ###
