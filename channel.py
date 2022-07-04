@@ -19,8 +19,7 @@ from telegram import (
 from telegram.constants import ChatAction
 from utils import DataBase
 import os
-import dotenv
-dotenv.load_dotenv()
+import dotenv; dotenv.load_dotenv()
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -1013,7 +1012,7 @@ async def project_send_to_admin(update: Update, context: ContextTypes.DEFAULT_TY
 ### COMMON HANDLERS ###
 
 # this is a hard coding ...
-async def admin_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     try:
@@ -1122,6 +1121,9 @@ async def admin_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
         quote=True,
     )
     return await start(update,context)
+
+# async def admin_answer(update:Update,context:ContextTypes.DEFAULT_TYPE):
+#     user_id = 
 
 
 TOKEN = os.getenv("TOKEN")
@@ -1328,7 +1330,7 @@ def main() -> None:
             CommandHandler("start", start),
         ],
     ))
-    application.add_handler(CallbackQueryHandler(admin_answer))
+    application.add_handler(CallbackQueryHandler(admin_action))
 
     application.add_handler(ConversationHandler(
         entry_points=[
