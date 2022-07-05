@@ -34,18 +34,34 @@ class DataBase:
         return [keys_list, values_list]
     # inserting the temporary data
 
+    # async def insert_data(self, data: dict):  # insert_temp_data ###
+    #     connection = await aiosqlite.connect(self.db)
+    #     cursor = await connection.cursor()
+    #     separated_data = self.data_separator(data)
+    #     keys_list, values_list = separated_data
+    #     keys = ", ".join(keys_list)
+    #     question_marks = str("?, "*len(values_list))[:-2]
+    #     insert_query = f"INSERT INTO {self.table}({keys}) VALUES({question_marks})"
+    #     await cursor.execute(insert_query, values_list)
+
+    #     await connection.commit()
+    #     await connection.close()
+
     async def insert_data(self, data: dict):  # insert_temp_data ###
-        connection = await aiosqlite.connect(self.db)
-        cursor = await connection.cursor()
         separated_data = self.data_separator(data)
         keys_list, values_list = separated_data
         keys = ", ".join(keys_list)
         question_marks = str("?, "*len(values_list))[:-2]
-        insert_query = f"INSERT INTO {self.table}({keys}) VALUES({question_marks})"
-        await cursor.execute(insert_query, values_list)
 
-        await connection.commit()
-        await connection.close()
+        async with aiosqlite.connect(self.db) as connection:
+            async with connection.cursor() as cursor:
+                insert_query = f"INSERT INTO {self.table}({keys}) VALUES({question_marks})"
+                await cursor.execute(insert_query, values_list)
+
+                await connection.commit()
+
+
+
 
     # it gives a list containing 2 items, the first item is the variable in the database and the second item is the new value of the variable.
 
@@ -82,7 +98,7 @@ class DataBase:
         await connection.close()
 
 
-if '__main__' == __name__:
+def main():
     connection = sqlite3.connect('DataBase.db')
     cursor = connection.cursor()
     query = """CREATE TABLE adv(
@@ -151,3 +167,6 @@ if '__main__' == __name__:
     cursor.execute(query)
     connection.commit()
     connection.close()
+
+# if '__main__' == __name__:
+#     main()
