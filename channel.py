@@ -578,7 +578,6 @@ async def adv_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=caption,
             reply_markup=InlineKeyboardMarkup(inline_keyboard)
         )
-    print(caption)
     await asyncio.sleep(4)
 
     await final_adv.insert_data({"user_id": user_id, "caption": caption, "photo": binary_photo})
