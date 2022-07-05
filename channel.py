@@ -1329,6 +1329,7 @@ def main() -> None:
             MessageHandler(filters.Text([cancel_text]), cancel),
             CommandHandler("start", start),
         ],
+        map_to_parent={}
     ))
     application.add_handler(CallbackQueryHandler(admin_action))
 
@@ -1348,7 +1349,7 @@ def main() -> None:
     application.add_handler(MessageHandler(filters.COMMAND, unknown_command))
     application.add_handler(MessageHandler(filters.TEXT, unknown_text))
     application.add_handler(MessageHandler(filters.ALL, unknown_file))
-    application.run_polling()
+    application.run_polling(timeout=500)
 
 
 if __name__ == "__main__":

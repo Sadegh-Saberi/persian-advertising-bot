@@ -2,9 +2,11 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,database,python
 
 test.py
-ptb.zip
+*.zip
+*.rar
 features.txt
 guide.txt
+
 ### Database ###
 *.accdb
 *.db
