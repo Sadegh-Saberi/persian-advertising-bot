@@ -8,19 +8,20 @@ class DataBase:
         self.not_update_values = not_update_values
         self.table = table
 
-    def number_to_gender(number: int):
+    def number_to_gender(self,number: int):
         if number == 0:
-            return 'آقا'
+            return  "آقا"
         elif number == 1:
-            return 'خانم'
+            return "خانم"
         elif number == 2:
-            return 'آقا یا خانم'
+            return "آقا یا خانم"
 
-    def number_to_term(number: int):  # number to work term
+
+    def number_to_term(self,number: int):  # number to work term
         if number == 0:
-            return 'پاره وقت'
+            return "پاره وقت"
         elif number == 1:
-            return 'تمام وقت'
+            return "تمام وقت"
 
     def data_separator(self, data: dict):
         keys_list = list()
@@ -33,7 +34,7 @@ class DataBase:
         return [keys_list, values_list]
 
 
-    async def insert_data(self, data: dict):  # insert_temp_data ###
+    async def insert_data(self, data: dict):
         separated_data = self.data_separator(data)
         keys_list, values_list = separated_data
         keys = ", ".join(keys_list)
@@ -43,29 +44,30 @@ class DataBase:
             async with connection.cursor() as cursor:
                 insert_query = f"INSERT INTO {self.table}({keys}) VALUES({question_marks})"
                 await cursor.execute(insert_query, values_list)
-
                 await connection.commit()
 
 
-    async def update_data(self, user_id: int, key: str, value):  # update_temp_data ###
+    async def update_data(self, user_id: int, key: str, value):
         if value not in self.not_update_values:
             update_query = f""" UPDATE {self.table}
                                 SET  {key} = ?  
                                 WHERE user_id = ?"""
+
             async with aiosqlite.connect(self.db) as connection:
                 async with connection.cursor() as cursor:
                     await cursor.execute(update_query, [value, user_id])
                     await connection.commit()
 
 
-    async def get_data(self, key, value):  # get data
+    async def get_data(self, key, value):
         get_user_data_query = f""" SELECT * FROM {self.table} 
                                   WHERE {key} = ? """
+
         async with aiosqlite.connect(self.db) as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute(get_user_data_query, [value])
+                cursor.execute(get_user_data_query, [value])
                 data = await cursor.fetchone()
-        return data
+                return data 
 
 
     async def delete_data(self, key: str, value):
