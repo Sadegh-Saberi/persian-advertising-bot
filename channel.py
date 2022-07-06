@@ -241,7 +241,6 @@ async def adv_gender(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ADV_TERM
 
 
-# شیوه‌ی همکاری
 async def adv_term(update: Update, context: ContextTypes.DEFAULT_TYPE):
     term_text = update.message.text
     user_id = update.effective_chat.id
@@ -265,13 +264,11 @@ async def adv_term(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=ReplyKeyboardMarkup(
             keyboard=keyboard,
             resize_keyboard=True,
-            # one_time_keyboard=True
         )
     )
     return ADV_EDUCATION
 
 
-# رد شدن از شیوه‌ی همکاری
 async def adv_skip_term(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_chat.id
 
@@ -282,8 +279,6 @@ async def adv_skip_term(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     return ADV_EDUCATION
-
-# تحصیلات
 
 
 async def adv_education(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -301,13 +296,11 @@ async def adv_education(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=ReplyKeyboardMarkup(
             keyboard=keyboard,
             resize_keyboard=True,
-            # one_time_keyboard=True,
         ))
 
     return ADV_EXPERIENCE
 
 
-# ٰرد شدن از تحصیلات
 async def adv_skip_education(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_chat.id
     await context.bot.send_chat_action(chat_id=user_id, action=ChatAction.TYPING)
@@ -317,8 +310,6 @@ async def adv_skip_education(update: Update, context: ContextTypes.DEFAULT_TYPE)
         "لطفا سابقه‌ی کار مورد نیاز را وارد کنید."
     )
     return ADV_EXPERIENCE
-
-# سابقه‌ی کاری
 
 
 async def adv_experience(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -388,7 +379,6 @@ async def adv_age(update: Update, context: ContextTypes.DEFAULT_TYPE):  # سن
         reply_markup=ReplyKeyboardMarkup(
             keyboard=keyboard,
             resize_keyboard=True,
-            # one_time_keyboard=True,
         )
     )
     return ADV_ADVANTAGES
@@ -438,7 +428,7 @@ async def adv_skip_advantages(update: Update, context: ContextTypes.DEFAULT_TYPE
     return ADV_CONTACT
 
 
-async def adv_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):  # راه ارتباطی
+async def adv_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_chat.id
     contact_text = update.message.text
     keyboard = [
@@ -840,7 +830,6 @@ async def service_send_to_admin(update: Update, context: ContextTypes.DEFAULT_TY
 
 
 ### PROJECT HANDLERS ###
-
 
 async def project_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_chat.id
